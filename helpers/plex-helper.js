@@ -23,6 +23,10 @@ module.exports = {
             radarrResp = err;
         })
 
+        // console.log(radarrResp);
+        // console.log("rating:")
+        // console.log(radarrResp[0].ratings.imdb)
+
         return radarrResp;
     },
 
