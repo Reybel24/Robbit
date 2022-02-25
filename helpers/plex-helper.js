@@ -35,7 +35,7 @@ module.exports = {
             "monitored": true,
             "rootFolderPath": `${radarr.rootMediaPath}Movies\\`,
             "addOptions": {
-                "searchForMovie": false
+                "searchForMovie": true
             }
         }
 

@@ -25,6 +25,16 @@ module.exports = {
                     .setStyle('SUCCESS'),
             )
 
+        // Movie on plex
+        const actionsMovieOnPlex = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setCustomId('goToMovie')
+                    .setLabel('View On Plex')
+                    .setStyle('SECONDARY')
+                    .setDisabled(true)
+            )
+
         // console.log(radarr)
 
         // Check response
@@ -60,7 +70,7 @@ module.exports = {
                     { name: 'Inline field title', value: 'Some value here', inline: true },
                 )
                 .addField('Inline field title', 'Some value here', true)
-                // .setImage(imgUrl)
+                .setImage(imgUrl)
                 .setTimestamp()
                 .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/AfFp7pu.png' });
 
@@ -82,9 +92,9 @@ module.exports = {
                 console.log("is available:", isAvailable)
 
                 if (i < 1) {
-                    await interaction.reply({ embeds: [movies[0]], components: (isAvailable === 'No') ? [actionsMovieNotOnPlex] : [] });
+                    await interaction.reply({ embeds: [movies[0]], components: (isAvailable === 'No') ? [actionsMovieNotOnPlex] : [actionsMovieOnPlex] });
                 } else {
-                    await interaction.followUp({ embeds: [movies[i]], components: (isAvailable === 'No') ? [actionsMovieNotOnPlex] : [] });
+                    await interaction.followUp({ embeds: [movies[i]], components: (isAvailable === 'No') ? [actionsMovieNotOnPlex] : [actionsMovieOnPlex] });
                 }
             }
         }
