@@ -1,7 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const plex = require('../helpers/plex-helper.js');
-const tautulliHelper = require('../helpers/tautulli-helper.js');
+const tautulli = require('../helpers/tautulli-helper.js');
+const hyperbeam = require('../helpers/hyperbeam-helper.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -56,6 +57,7 @@ module.exports = {
                 movieUrl: `https://www.themoviedb.org/movie/${movieId}`,
                 imgUrl: (movie.images.length > 0) ? movie.images[0].remoteUrl : "",
                 isAvailableOnPlex: movie.hasFile,
+                ratingKey: null,
                 shareableUrl: null,
                 embed: null
             }
@@ -64,10 +66,12 @@ module.exports = {
             let tautulliMediaItem = null;
             if (isAvailableOnPlex) {
                 // Get tautulli metadata
-                tautulliMediaItem = await tautulliHelper.searchMovie(title, movieImdbId);
+                tautulliMediaItem = await tautulli.searchMovie(title, movieImdbId);
+
+                movieExtractedProperties.ratingKey = tautulliMediaItem.rating_key;
 
                 // Construct a shareable plex link using its rating key
-                movieExtractedProperties.shareableUrl = plex.getPlexMediaShareableUrl(tautulliMediaItem.rating_key);
+                movieExtractedProperties.shareableUrl = plex.getPlexMediaShareableUrl(movieExtractedProperties.ratingKey);
             }
 
             let ratingsToShow = [];
@@ -125,6 +129,7 @@ module.exports = {
                 .addFields(
                     { name: `${availableOnPlexString}`, value: (isAvailableOnPlex) ? "<:white_check_mark:946690043400052777> Yes" : "<:regional_indicator_x:946690476680024064> No", inline: true },
                     { name: 'TMDB ID', value: `${movieId}`, inline: true },
+                    { name: 'Rating Key', value: `${movieExtractedProperties.ratingKey}`, inline: true },
                 )
                 .setImage(imgUrl)
                 .setTimestamp()
@@ -159,6 +164,17 @@ module.exports = {
                                 .setURL(movie.shareableUrl)
                         )
                     btns.push(viewOnPlexBtn);
+
+                    // hyperbeam.createRoom(movie.shareableUrl);
+                    startWatchPartyBtn = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('createRoom')
+                                .setLabel('Start Watch Party')
+                                .setStyle('PRIMARY')
+                            // .setDisabled(true)
+                        )
+                    btns.push(startWatchPartyBtn);
                 }
 
                 if (i < 1) {
