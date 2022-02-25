@@ -2,7 +2,7 @@
 Plex & radarr helper
 */
 
-const { radarr } = require('../config.json');
+const { plex, radarr } = require('../config.json');
 const axios = require('axios');
 
 module.exports = {
@@ -24,8 +24,6 @@ module.exports = {
         })
 
         // console.log(radarrResp);
-        // console.log("rating:")
-        // console.log(radarrResp[0].ratings.imdb)
 
         return radarrResp;
     },
@@ -61,5 +59,21 @@ module.exports = {
 
         // console.log(radarrResp)
         return radarrResp;
+    },
+
+    getPlexMediaUrl(ratingKey) {
+        const url = `/details?key=%2Flibrary%2Fmetadata%2F${ratingKey}`;
+        return url;
+    },
+
+    getPlexServerUrl() {
+        return plex.baseServerUrl;
+    },
+
+    getPlexMediaShareableUrl(ratingKey) {
+        const prefix = plex.baseServerUrl;
+        const affix = this.getPlexMediaUrl(ratingKey);
+        const fullUrl = prefix + affix;
+        return fullUrl;
     }
 }

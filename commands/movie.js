@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const plex = require('../helpers/plex-helper.js');
+const tautulliHelper = require('../helpers/tautulli-helper.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -10,7 +11,6 @@ module.exports = {
     async execute(interaction) {
         // Add movie to radarr
         const inputMovie = interaction.options.getString('movie');
-        console.log("movie input: ", inputMovie);
         const radarr = await plex.searchMovie(inputMovie);
 
         // Create movie embeds
@@ -33,27 +33,42 @@ module.exports = {
                     .setLabel('View On Plex')
                     .setStyle('SECONDARY')
                     .setDisabled(true)
+                // .setURL(movieExtractedProperties.shareableUrl)
             )
-
-        // console.log(radarr)
-
-        // Check response
-        // if (radarr.status === 400 && radarr.data[0].errorCode === 'MovieExistsValidator') {
-        // console.log("Movie already exists!")
-        //  messageContent = "Movie alrady exists!"
-        // } else {
-        //    messageContent = "Hello."
-        // }
 
         let availableOnPlexString = 'Available on <:plex:946685930645905439>'
 
         // Create embed for each movie
         for (let i = 0; i < radarr.length; i++) {
             let movie = radarr[i];
+            let title = movie.title;
             let movieId = movie.tmdbId;
+            let movieImdbId = movie.imdbId;
             let movieUrl = `https://www.themoviedb.org/movie/${movieId}`
             let imgUrl = (movie.images.length > 0) ? movie.images[0].remoteUrl : "";
             let isAvailableOnPlex = movie.hasFile;
+
+            // Properties
+            var movieExtractedProperties = {
+                title: title,
+                movieId: movie.tmdbId,
+                movieImdbId: movie.imdbId,
+                movieUrl: `https://www.themoviedb.org/movie/${movieId}`,
+                imgUrl: (movie.images.length > 0) ? movie.images[0].remoteUrl : "",
+                isAvailableOnPlex: movie.hasFile,
+                shareableUrl: null,
+                embed: null
+            }
+
+            // Get shareable link
+            let tautulliMediaItem = null;
+            if (isAvailableOnPlex) {
+                // Get tautulli metadata
+                tautulliMediaItem = await tautulliHelper.searchMovie(title, movieImdbId);
+
+                // Construct a shareable plex link using its rating key
+                movieExtractedProperties.shareableUrl = plex.getPlexMediaShareableUrl(tautulliMediaItem.rating_key);
+            }
 
             let ratingsToShow = [];
             if ('imdb' in movie.ratings) {
@@ -94,9 +109,7 @@ module.exports = {
 
             // TODO: create enums for field values
 
-            // console.log("id: ", movieId)
-
-            const movieEmbed = new MessageEmbed()
+            movieExtractedProperties.embed = new MessageEmbed()
                 .setColor('#0099ff')
                 .setTitle(movie.title)
                 .setURL(movieUrl)
@@ -118,26 +131,40 @@ module.exports = {
                 .setFooter({ text: 'Robbit Plex Bot', iconURL: 'https://i.imgur.com/AfFp7pu.png' });
 
             // Add to embeds list
-            movies.push(movieEmbed)
+            movies.push(movieExtractedProperties)
         }
 
         // Send rest of embeds
         if (movies.length > 1) {
             for (let i = 0; i < movies.length; i++) {
                 // const actionsRow = (movies[i].)
-                // console.log(movies[i])
+                const movie = movies[i];
 
-                // Get is available on plex
-                let isAvailable = movies[i].fields.filter((field) => {
-                    return field.name === `${availableOnPlexString}`;
-                })
-                if (isAvailable.length > 0) isAvailable = isAvailable[0].value;
-                // console.log("is available:", isAvailable)
+                let btns = [];
+
+                // Show "Add to Plex" button
+                if (!movie.isAvailableOnPlex) btns.push(actionsMovieNotOnPlex);
+
+                // Show "View on Plex" button
+                let viewOnPlexBtn = null;
+                if (movie.shareableUrl) {
+                    // Set button url to this movie
+                    viewOnPlexBtn = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                // .setCustomId('goToMovie')
+                                .setLabel('View On Plex')
+                                .setStyle('LINK')
+                                // .setDisabled(true)
+                                .setURL(movie.shareableUrl)
+                        )
+                    btns.push(viewOnPlexBtn);
+                }
 
                 if (i < 1) {
-                    await interaction.reply({ embeds: [movies[0]], components: (isAvailable === 'No') ? [actionsMovieNotOnPlex] : [actionsMovieOnPlex] });
+                    await interaction.reply({ embeds: [movies[0].embed], components: btns });
                 } else {
-                    await interaction.followUp({ embeds: [movies[i]], components: (isAvailable === 'No') ? [actionsMovieNotOnPlex] : [actionsMovieOnPlex] });
+                    await interaction.followUp({ embeds: [movies[i].embed], components: btns });
                 }
             }
         }
