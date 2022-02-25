@@ -115,7 +115,7 @@ module.exports = {
                 )
                 .setImage(imgUrl)
                 .setTimestamp()
-                .setFooter({ text: 'Robbot Plex Bot', iconURL: 'https://i.imgur.com/AfFp7pu.png' });
+                .setFooter({ text: 'Robbit Plex Bot', iconURL: 'https://i.imgur.com/AfFp7pu.png' });
 
             // Add to embeds list
             movies.push(movieEmbed)
