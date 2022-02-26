@@ -162,19 +162,17 @@ module.exports = {
                                 .setStyle('LINK')
                                 // .setDisabled(true)
                                 .setURL(movie.shareableUrl)
-                        )
-                    btns.push(viewOnPlexBtn);
-
-                    // hyperbeam.createRoom(movie.shareableUrl);
-                    startWatchPartyBtn = new MessageActionRow()
-                        .addComponents(
+                                .setEmoji('946685930645905439')
+                        ).addComponents(
                             new MessageButton()
                                 .setCustomId('createRoom')
                                 .setLabel('Start Watch Party')
                                 .setStyle('PRIMARY')
-                            // .setDisabled(true)
-                        )
-                    btns.push(startWatchPartyBtn);
+                                .setEmoji('947002671523590204')
+                                );
+
+                    btns.push(viewOnPlexBtn);
+                    // btns.push(startWatchPartyBtn);
                 }
 
                 if (i < 1) {

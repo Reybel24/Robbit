@@ -60,27 +60,69 @@ module.exports = {
                 // Create link to media here using rating key
                 const shareableLink = plex.getPlexMediaShareableUrl(ratingKey);
 
+                // Delete all active rooms
+                console.log("DELETING ALL ACTIVE ROOMS")
+                await hyperbeam.deleteAllActiveRooms();
+
                 // Make a new room
                 const party = await hyperbeam.createRoom(shareableLink);
                 let joinPartyBtn;
-                console.log('party response: ', party.status)
-                if (party.status == 201) {
+                // console.log('party response: ', party.status)
+                if (party.status == 200) {
                     console.log('room created succesfully!')
                     console.log("party url: ", party.data.embed_url);
+                    console.log('starting room with url: ', shareableLink)
+
+                    // Get current message data so we can modify buttons
+                    let previousButtons = interaction.message.components[0].components;
+                    let newButtons = [];
+                    console.log(previousButtons)
+                    let viewOnPlexBtn = previousButtons.filter((btn) => {
+                        return btn.label === 'View On Plex'
+                    })
+                    if (viewOnPlexBtn.length > 0) {
+                        newButtons.push(viewOnPlexBtn[0])
+                    }
+
+                    // Disable create watch party button
+                    let partyBtn = previousButtons.filter((btn) => {
+                        return btn.label === 'Start Watch Party'
+                    })
+                    if (partyBtn.length > 0) {
+                        partyBtn[0].setDisabled(true);
+                        newButtons.push(partyBtn[0])
+                    }
 
                     // Creat join party button button
                     joinPartyBtn = new MessageActionRow()
                         .addComponents(
                             new MessageButton()
                                 // .setCustomId('joinParty')
-                                .setLabel('Join Party')
+                                .setLabel('Join Watch Party')
                                 .setStyle('LINK')
-                                .setURL(`${party.embed_url}`)
+                                .setURL(`${party.data.embed_url}`)
+                                .setEmoji('947007776205443092')
                         )
 
+                    let newButtonRow = new MessageActionRow()
+                        .addComponents(newButtons[0])
+                        .addComponents(newButtons[1])
+                        .addComponents(
+                            new MessageButton()
+                                // .setCustomId('joinParty')
+                                .setLabel('Join Party')
+                                .setStyle('LINK')
+                                .setURL(`${party.data.embed_url}`)
+                                .setEmoji('947007776205443092')
+                        )
+
+                    // Update original message button
+                    await interaction.update({ components: [newButtonRow] });
+
                     // Join party message
-                    await interaction.reply({
-                        content: `Someone has started a watch party!`,
+                    let username = interaction.member.nickname
+                    await interaction.followUp({
+                        content: `${username} has started a watch party! Click to join.`,
                         components: [joinPartyBtn]
                     });
                 } else {
@@ -150,7 +192,6 @@ module.exports = {
                 }
 
                 let voteEmoji = jsonHelper.getVoteEmoji(interaction.customId);
-                console.log(voteEmoji)
 
                 await interaction.update({ embeds: [updatedEmbed] });
                 await interaction.followUp(`${interaction.member.nickname} voted ** ${voteEmoji} ${voteString}**.`);
