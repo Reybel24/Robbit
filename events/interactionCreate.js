@@ -65,7 +65,7 @@ module.exports = {
                 await hyperbeam.deleteAllActiveRooms();
 
                 // Make a new room
-                const party = await hyperbeam.createRoom(shareableLink);
+                const party = await hyperbeam.createRoom(shareableLink, kioskMode=true);
                 let joinPartyBtn;
                 // console.log('party response: ', party.status)
                 if (party.status == 200) {

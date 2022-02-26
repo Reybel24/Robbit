@@ -7,7 +7,7 @@ const profileName = 'discord_party_robbit';
 
 module.exports = {
     // Create a room that will automatically open to a plex media item (movie)
-    async createRoom(url) {
+    async createRoom(url, kioskMode = false) {
         let hyperbeamResp;
         await axios({
             method: 'post',
@@ -16,7 +16,7 @@ module.exports = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${hyperbeam.apiKey}`
             },
-            data: { 'start_url': url, 'offline_timeout': 15, 'profile_save': true, 'kiosk': true }
+            data: { 'start_url': url, 'offline_timeout': 30, 'profile_save': true, 'kiosk': kioskMode, region: 'NA' }
         }).then(resp => {
             console.log(resp.data);
             hyperbeamResp = resp;
