@@ -1,4 +1,5 @@
 const plex = require('../helpers/plex-helper.js');
+const jsonHelper = require('../helpers/json-helper.js');
 const hyperbeam = require('../helpers/hyperbeam-helper.js');
 const { MessageActionRow, MessageButton } = require('discord.js');
 
@@ -94,7 +95,8 @@ module.exports = {
 
 
             } else {
-                console.log(`${interaction.user.tag} voted ${interaction.customId}`)
+                console.log(`${interaction.member.nickname} voted ${interaction.customId}`)
+                // console.log(interaction)
                 var voteString = "";
                 switch (interaction.customId) {
                     case 'ah':
@@ -107,7 +109,51 @@ module.exports = {
                         voteString = 'everyone sucks here (ESH)';
                         break;
                 }
-                await interaction.reply(`${interaction.user.tag} voted ** ${voteString} **.`);
+
+                // console.log(interaction)
+                // Save vote
+                let postId = interaction.message.embeds[0].fields.filter((field) => {
+                    return field.name === 'Post ID';
+                })
+                postId = postId[0].value;
+                let updatedVotes = jsonHelper.saveVote(postId, interaction.user.id, interaction.customId);
+
+                // Update message vote fields from file data
+                let updatedEmbed = interaction.message.embeds[0];
+
+                for (let i = 0; i < updatedEmbed.fields.length; i++) {
+                    let fieldKey = updatedEmbed.fields[i].name;
+
+                    if (jsonHelper.englishToAbbr(fieldKey) == 'ah' || jsonHelper.englishToAbbr(fieldKey) == 'nta' || jsonHelper.englishToAbbr(fieldKey) == 'esh') {
+
+                        // Convert vals to string
+                        let votes = updatedVotes[jsonHelper.englishToAbbr(fieldKey)];
+                        let votesString = '';
+                        if (votes.length > 0) {
+                            for (let j = 0; j < votes.length; j++) {
+                                let userId = votes[j];
+                                let user = await interaction.message.guild.members.fetch(userId);
+
+                                votesString += `${jsonHelper.getRandomPeopleEmoji()} ` + user.nickname;
+
+                                if (j < votes.length - 1) {
+                                    // Add line break
+                                    votesString += '\n'
+                                }
+                            }
+                        } else {
+                            votesString = '<:transparent:946682488896512002>';
+                        }
+
+                        updatedEmbed.fields[i].value = votesString;
+                    }
+                }
+
+                let voteEmoji = jsonHelper.getVoteEmoji(interaction.customId);
+                console.log(voteEmoji)
+
+                await interaction.update({ embeds: [updatedEmbed] });
+                await interaction.followUp(`${interaction.member.nickname} voted ** ${voteEmoji} ${voteString}**.`);
                 // await interaction.followUp({ content: `URL: ${ interaction.postUrl }`, ephemeral: true });
                 // return interaction.deferUpdate();
             }
