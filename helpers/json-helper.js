@@ -36,10 +36,10 @@ module.exports = {
         let post = aitaData[postId]
         if (post) {
             // Exists, update data
-            console.log("updaing existing post")
+            // console.log("updaing existing post")
             post.votes = voteData;
         } else {
-            console.log("creating new entry")
+            // console.log("creating new entry")
             // Create new entry
             let postData = {
                 post_id: postId,
@@ -63,7 +63,6 @@ module.exports = {
     },
     getPostSavedData(postId) {
         let data = this.readData();
-        // console.log(data)
         let post = data[postId];
         if (post) {
             return post;
@@ -71,8 +70,9 @@ module.exports = {
         return false;
     },
     saveVote(postId, userId, vote) {
-        let postData = this.getPostSavedData(postId);
-        console.log(postData)
+        let postData = this.getPostSavedData(postId.substring(1, postId.length - 1));
+        if (!postData) return false;
+        // console.log(postData)
 
         // Check if user has voted on this post yet
         for (const [key, value] of Object.entries(postData.votes)) {
@@ -82,7 +82,7 @@ module.exports = {
                 if (key == vote) {
                     // User has already voted for this option. Can't vote twice
                     // Do nothing
-                    console.log('dupliacte vote!');
+                    console.log('duplicate vote!');
                     break;
                 } else {
                     // Remove user vote from this column
@@ -127,11 +127,10 @@ module.exports = {
         return Math.floor(Math.random() * (max - min + 1) + min)
     },
     getRandomPeopleEmoji() {
-        let randNum = this.randomIntFromInterval(0, peopleEmojis.length-1);
+        let randNum = this.randomIntFromInterval(0, peopleEmojis.length - 1);
         return peopleEmojis[randNum];
     },
     getVoteEmoji(vote) {
-        console.log("getting emoji for: ", vote)
         return voteEmojis[vote];
     }
 }

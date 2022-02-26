@@ -3,6 +3,9 @@ const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const reddit = require('../reddit-helper.js');
 const jsonHelper = require('../helpers/json-helper.js');
 
+// Threads will be created within this channel
+const channelId = '944884168100315136';
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('aita')
@@ -10,6 +13,29 @@ module.exports = {
     async execute(interaction) {
         // Fetch post from reddit
         const post = await reddit.getRandomPost();
+
+        // console.log(interaction.client)
+        const client = interaction.client;
+        let channel;
+        await client.channels.fetch(channelId)
+            .then(chn => channel = chn)
+            .catch(console.error);
+
+        // Make sure we are not inside a thread
+        // console.log("channel is thread: ", channel.isThread())
+
+        const thread = await channel.threads.create({
+            name: post.title,
+            autoArchiveDuration: 60,
+            reason: '',
+        });
+
+        console.log(`Created thread: ${thread.name}`);
+
+        // Bot join thread
+        if (thread.joinable) await thread.join();
+
+        // console.log(`Created thread: ${thread.name}`);
 
         // Cut text if too long
         const charLimit = 5000;
@@ -54,10 +80,10 @@ module.exports = {
             // .setThumbnail(imgUrl)
             .addFields(
                 { name: '\u200B', value: '\u200B' },
-                { name: 'Posted by', value: post.author, inline: true },
+                { name: 'Posted by', value: `<:reddit:947031868702871589> ${post.author}`, inline: true },
                 // { name: '\u200B', value: '\u200B' },
-                { name: 'Upvotes', value: `${post.ups}`, inline: true },
-                { name: 'Post ID', value: `${post.id}`, inline: true },
+                { name: 'Upvotes', value: `<:upvote:947029838168997889> ${post.ups}`, inline: true },
+                { name: 'Post ID', value: `*${post.id}*`, inline: true },
             )
             .addFields(
                 { name: '\u200B', value: '\u200B' },
@@ -75,8 +101,10 @@ module.exports = {
         // .then(message => console.log(message.content))
         // .catch(console.error);
 
-        // await interaction.reply({ content: `[${post.title}](${url})\nby** ${post.author}**\n${post.ups} upvotes\n${postBody}`, components: [row] });
-        let msg = await interaction.reply({ embeds: [embed], components: [row] }).then((sent) => {
-        })
+        // Send message in thread
+        thread.send({ embeds: [embed], components: [row] });
+
+        // let msg = await interaction.reply({ embeds: [embed], components: [row] });
+        await interaction.reply({ content: `**${interaction.member.nickname}** created a new thread. <:thinking:947030764183244820>` });
     }
 };

@@ -137,6 +137,7 @@ module.exports = {
 
 
             } else {
+                console.log(interaction.member)
                 console.log(`${interaction.member.nickname} voted ${interaction.customId}`)
                 // console.log(interaction)
                 var voteString = "";
@@ -159,6 +160,12 @@ module.exports = {
                 })
                 postId = postId[0].value;
                 let updatedVotes = jsonHelper.saveVote(postId, interaction.user.id, interaction.customId);
+
+                if (!updatedVotes) {
+                    // Updating failed for some reason. ID may not have been found in file.
+                    await interaction.reply({ content: 'Voting failed <:cry:947034225356443699>. Please try again in a few seconds.' });
+                    return;
+                }
 
                 // Update message vote fields from file data
                 let updatedEmbed = interaction.message.embeds[0];
@@ -192,11 +199,8 @@ module.exports = {
                 }
 
                 let voteEmoji = jsonHelper.getVoteEmoji(interaction.customId);
-
                 await interaction.update({ embeds: [updatedEmbed] });
-                await interaction.followUp(`${interaction.member.nickname} voted ** ${voteEmoji} ${voteString}**.`);
-                // await interaction.followUp({ content: `URL: ${ interaction.postUrl }`, ephemeral: true });
-                // return interaction.deferUpdate();
+                await interaction.followUp(`${interaction.member.nickname} voted **${voteEmoji} ${voteString}**.`);
             }
         }
     },
