@@ -65,7 +65,7 @@ module.exports = {
                 await hyperbeam.deleteAllActiveRooms();
 
                 // Make a new room
-                const party = await hyperbeam.createRoom(shareableLink, kioskMode=true);
+                const party = await hyperbeam.createRoom(shareableLink, kioskMode = true);
                 let joinPartyBtn;
                 // console.log('party response: ', party.status)
                 if (party.status == 200) {
@@ -122,7 +122,7 @@ module.exports = {
                     // Join party message
                     let username = interaction.member.nickname
                     await interaction.followUp({
-                        content: `${username} has started a watch party! Click to join.`,
+                        content: `**${username}** has started a watch party! Click to join.`,
                         components: [joinPartyBtn]
                     });
                 } else {
@@ -137,8 +137,10 @@ module.exports = {
 
 
             } else {
-                console.log(interaction.member)
-                console.log(`${interaction.member.nickname} voted ${interaction.customId}`)
+                console.log(interaction.user)
+                console.log(`${interaction.user.nickname} voted ${interaction.customId}`)
+
+                let username = (interaction.member.nickname) ? interaction.member.nickname : interaction.user.username;
                 // console.log(interaction)
                 var voteString = "";
                 switch (interaction.customId) {
@@ -182,8 +184,12 @@ module.exports = {
                             for (let j = 0; j < votes.length; j++) {
                                 let userId = votes[j];
                                 let user = await interaction.message.guild.members.fetch(userId);
+                                console.log("USER")
+                                console.log(user)
+                                let userDisplayName = (user.nickname != null) ? user.nickname : user.user.username;
 
-                                votesString += `${jsonHelper.getRandomPeopleEmoji()} ` + user.nickname;
+
+                                votesString += `${jsonHelper.getRandomPeopleEmoji()} ` + userDisplayName;
 
                                 if (j < votes.length - 1) {
                                     // Add line break
@@ -200,7 +206,7 @@ module.exports = {
 
                 let voteEmoji = jsonHelper.getVoteEmoji(interaction.customId);
                 await interaction.update({ embeds: [updatedEmbed] });
-                await interaction.followUp(`${interaction.member.nickname} voted **${voteEmoji} ${voteString}**.`);
+                await interaction.followUp(`${username} voted **${voteEmoji} ${voteString}**.`);
             }
         }
     },

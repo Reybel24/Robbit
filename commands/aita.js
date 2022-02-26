@@ -71,6 +71,8 @@ module.exports = {
 
         jsonHelper.writeData(post.id);
 
+        let username = (interaction.member.nickname) ? interaction.member.nickname : interaction.user.username;
+
         const embed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle(post.title)
@@ -105,6 +107,6 @@ module.exports = {
         thread.send({ embeds: [embed], components: [row] });
 
         // let msg = await interaction.reply({ embeds: [embed], components: [row] });
-        await interaction.reply({ content: `**${interaction.member.nickname}** created a new thread. <:thinking:947030764183244820>` });
+        await interaction.reply({ content: `**${username}** created a new thread. <:thinking:947030764183244820>` });
     }
 };
