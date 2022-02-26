@@ -105,3 +105,6 @@ dist
 
 # Secrets
 config.json
+
+# Data
+data/
